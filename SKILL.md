@@ -93,6 +93,20 @@ Do not assume one universal Claude default. When unsure, start with **Claude Opu
 - Fable 5 is optimized for the hardest long-horizon autonomous work. Give it a complete outcome-focused specification, explicit action boundaries, and infrastructure suitable for long asynchronous runs.
 - Ground every long-run progress claim in actual tool results. Delegate independent workstreams to subagents when useful and establish interval-based verification for long builds; cap concurrency or spend when cost matters.
 
+*Fable 5.1 (deltas from Fable 5):*
+- Effort-level names don't map 1:1 across generations — re-run the sweep; `low` often competitive with larger models at lower cost.
+- Writes fewer user-facing updates between tool calls at higher effort — ask explicitly for progress text if users need it, and drop any "hold findings for the final response" instruction.
+- In custom coding/computer-use loops may issue one tool call per turn instead of batching — add a one-line nudge to batch independent calls.
+- Append-only conversation history is enforced for new accounts — never edit earlier turns, rewrite `system`/`tools`, or summarize in place between requests; it invalidates later thinking blocks.
+- Prose runs denser and formats less than Fable 5 — ban "mannered prose" (metaphor/flourish over direct statement) if density is a problem, and replace blanket anti-bullet/anti-bold rules with a rule for when formatting is appropriate.
+- More likely to reproduce source passages without marking them as quotes when summarizing — give one correct worked example in the system prompt.
+- At `low` effort calls search/retrieval tools less and answers from memory more — raise effort for affected turns, or add a verification nudge for unfamiliar/fast-moving names.
+- Safety classifiers throw fewer false positives than at launch, but compile-check phrasing, lesser-known languages, and base64 tool output still trigger them — phrase around these.
+- Rewrites whole files for small changes more often than Fable 5 — add an explicit "prefer a surgical edit over a full rewrite" instruction.
+- At `xhigh`/`max` effort on long deliverables may draft the full output in its thinking, then again in the reply — budget `max_tokens` for both, or stay at `high` unless you've measured a gain.
+- If the lead agent waits for every subagent before continuing, let it keep working and receive results async — lowers time-to-completion at similar cost.
+- Vision work benefits from crop/zoom tooling on dense images/charts — a cropping tool alone delivers most of the uplift if a full container is too much overhead.
+
 *Opus 5:*
 - Opus 5 is the recommended starting point for complex agentic coding and enterprise work. Keep scope tight: "Deliver what was asked. Do not add features, refactors, or abstractions beyond the task."
 - Opus 5 already self-verifies strongly. Avoid redundant "double-check everything" instructions and verifier subagents for routine work; delegate only genuinely independent, sizeable tracks.
