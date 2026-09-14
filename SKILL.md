@@ -95,15 +95,16 @@ Do not assume one universal Claude default. When unsure, start with **Claude Opu
 
 *Fable 5.1 / Mythos 5.1 (deltas from Fable 5 — existing Fable 5 prompts still work as-is):*
 - Effort-level names don't carry the same thinking budget as on Fable 5 — re-sweep low/medium/high/xhigh/max rather than reusing a prior choice. At `low`, it's often competitive with Opus/Sonnet on cost per task.
-- Narrates less between tool calls by default. For pair-programming or other human-in-the-loop work, ask explicitly for a one-line "about to do X," brief progress updates, and a self-contained closing recap.
-- In coding/computer-use agent loops it can issue one independent tool call per turn instead of batching. Add: "list what you need next, then request everything that doesn't depend on another result in one response."
-- Writes denser prose (longer sentences, fewer breaks) and formats chat replies with fewer bullets/headers/bold than Fable 5 — drop anti-bullet-point rules written for older models; ask for "mannered prose" removal only if the target audience needs plainer text.
+- Narrates less between tool calls by default, more so at higher effort and in longer tool chains. Before adding prompt text, confirm the client renders progress-update thinking blocks and remove any older "hold all findings for the final response" line.
+- In coding/computer-use agent loops it can issue one independent tool call per turn instead of batching; explicitly requested multi-fetches already parallelize.
+- Writes denser prose (longer sentences, fewer breaks) and formats chat replies with fewer bullets/headers/bold than Fable 5 — drop anti-formatting rules written for older models and state when formatting is appropriate instead.
 - More likely to reproduce source wording without marking it a quotation when summarizing retrieved documents. One worked `<example>` of a correctly-quoted summary in the system prompt fixes this more reliably than a bare instruction.
-- Calls search/retrieval tools less at `low` effort and answers from memory instead — raise effort for the affected turns, or state that recognizing a name isn't the same as knowing its current state.
-- Rewrites whole files more readily for small changes. For coding-agent targets, add: "surgically edit rather than rewrite the entire file when that won't affect the end result."
-- At `xhigh`/`max` effort it can draft a long deliverable fully in its thinking, then write it out again in the reply. Default to `high` for long-deliverable requests; if running `xhigh`/`max`, size `max_tokens` for thinking plus reply and ask it to plan structure in reasoning, not draft the full output there.
+- Calls search/retrieval tools less at `low` effort and answers from memory instead — raise effort for the affected turns, or instruct that an unfamiliar or fast-moving name is the thing to verify.
+- Rewrites whole files more readily for small changes; a one-line instruction brings it back in line with Fable 5 for small and medium edits.
+- At `xhigh`/`max` effort it can draft a long deliverable fully in its thinking, then write it out again in the reply. Default to `high` for long-deliverable requests; if running `xhigh`/`max`, size `max_tokens` for thinking plus reply.
 - Fewer safety-classifier false positives than at launch, but three patterns still trigger them: "does this compile" phrasing (ask "are there bugs" instead), unfamiliar languages without doc context, and base64 blobs in tool output.
 - On vision-heavy work (dense charts, detail-heavy images), give it crop/zoom tooling rather than relying on one-shot recognition — it scales analysis depth with image tokens.
+- Use Template N for the eight instruction blocks these deltas call for. Paste them verbatim: Anthropic published and tested that exact wording, and each block carries its own placement (system prompt, user message, or turn-scoped).
 
 *Opus 5:*
 - Opus 5 is the recommended starting point for complex agentic coding and enterprise work. Keep scope tight: "Deliver what was asked. Do not add features, refactors, or abstractions beyond the task."

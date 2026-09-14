@@ -19,6 +19,7 @@ Full template library for Prompt Master. Read the relevant template when the use
 | [K — ComfyUI](#template-k--comfyui) | ComfyUI node-based image workflows |
 | [L — Prompt Decompiler](#template-l--prompt-decompiler) | Breaking down, adapting, or splitting existing prompts |
 | [M — Current Claude Task Brief](#template-m--current-claude-task-brief) | Complex, multi-step, or agentic task on current Claude models |
+| [N — Fable 5.1 Behavioral Patches](#template-n--fable-51-behavioral-patches) | Fixing a specific Fable 5.1 / Mythos 5.1 behavior — narration, batching, prose, quoting, search, edits, long output |
 
 ---
 
@@ -440,3 +441,77 @@ For long-running work, report progress only when it changes or when a checkpoint
 ```
 
 **When to use:** Current Claude models on any surface when the task is complex, multi-file, ambiguous, or agentic. Not needed for simple one-shot tasks.
+
+---
+
+## Template N — Fable 5.1 Behavioral Patches
+
+*Use when a Fable 5.1 or Mythos 5.1 prompt shows one of the behaviors below. Unlike the other templates, these are not shapes to adapt: each block is the wording Anthropic published and tested for that behavior, so paste it as written and change only the marked placeholder. Add only the blocks whose symptom you actually see. Source: [Prompting Claude Fable 5.1](https://platform.claude.com/docs/en/build-with-claude/prompt-engineering/prompting-claude-fable-5-1).*
+
+**N1 — Progress updates.** Symptom: goes quiet for minutes mid-tool-chain, or the final message covers only the last step. First confirm the client renders progress-update thinking blocks and delete any older "hold all findings for the final response" line. System prompt:
+
+```
+Before you start, say in a line what you're about to do; brief updates while you work help the user follow along. Close with a short recap that stands on its own — what you found, what you did, and what's next — so a reader who only sees the last message has the full picture.
+```
+
+If the product collapses or hides tool output, add this as a turn-scoped system message:
+
+```
+Only you see that command's output — the user's terminal shows at most a few lines of it. If the user needs to read any of it, put it in your reply.
+```
+
+**N2 — Tool-call batching.** Symptom: one independent tool call per turn in a coding or computer-use loop. Append to the end of the current request, re-sent each turn after the tool results:
+
+```
+First privately list what you need next; then request every item that doesn't depend on another's result in this one response.
+```
+
+**N3 — Writing density.** Symptom: prose runs long, dense, metaphor-heavy. User message (preferred) or system prompt:
+
+```
+Mannered prose substitutes metaphor and flourish for direct statement. Instead of "a parameter worth varying," the mannered writer produces "a dial worth turning." Instead of "this point still matters," they write "this point earns its keep." The phrases exist to display the writer, not to convey the idea, and readers can tell. That is why mannered prose irritates: it makes the reader work harder so the writer can perform. It is also imprecise. Metaphors drag in connotations the writer did not choose and cannot control. The fix is to say what you mean. When a literal phrase is available, use it.
+```
+
+The short version also tends to work: `Please remove all mannered prose.`
+
+**N4 — Formatting in chat.** Symptom: replies carry less structure than the content needs. Replace anti-formatting rules with:
+
+```
+Use lists and bullet points when asked to, or when the content is multifaceted enough that they help with clarity. If the person explicitly requests minimal formatting, always format your responses without bullet points, headers, lists, or bold emphasis, as requested. In conversational, personal, or emotional exchanges, keep to plain prose.
+```
+
+**N5 — Quoting retrieved sources.** Symptom: summaries reproduce source wording without marking it as a quotation. Add to the system prompt, replacing the two `[web_search: ...]` lines with your own tool's name so they read as templated tool output:
+
+```
+<example>
+<user>look up how the Riverton Ledger and the Coast Dispatch each covered the Harbor Bridge closure and compare their reporting</user>
+<response>
+[web_search: Harbor Bridge closure Riverton Ledger]
+[web_search: Harbor Bridge closure Coast Dispatch]
+Both outlets agree on the basics: the bridge closed on March 3 after inspectors found cracked welds, and the state expects repairs to take about eight months. Where they differ is emphasis. The Ledger treats it as a local-economy story. The Dispatch frames it as a funding failure; its editorial calls the closure "entirely foreseeable." Read together, the Ledger explains who is affected now and the Dispatch explains how it came to this — neither account alone gives the whole picture.
+</response>
+<rationale>CORRECT: The response is organized around where the two outlets agree and differ, not as a walk through either article. Each outlet's reporting is conveyed in one or two sentences of the assistant's own indirect speech. One short marked phrase from one source; every other claim is reworded. The response is still specific and complete.</rationale>
+</example>
+```
+
+**N6 — Search triggering at low effort.** Symptom: answers from memory instead of searching at `low` effort. Raising effort for those turns is the other fix. System prompt:
+
+```
+When a query centers on a name you do not confidently recognize, or recognize from a fast-moving area like AI models and developer tools where the landscape shifts within months, the name itself is the thing to verify: search before answering, and include the name as the user wrote it in at least one query alongside any reformulations. This holds even when you have some background on it — partial background is exactly what makes an out-of-date answer sound authoritative, so familiarity is not a reason to skip the search.
+```
+
+**N7 — Targeted edits.** Symptom: whole files rewritten for small changes. System prompt or first user message:
+
+```
+The number of tokens used to edit files is best minimized, all else being equal. Therefore, when it will not affect the end result, try to surgically edit a file rather than rewrite the entire thing.
+```
+
+**N8 — Long outputs at `xhigh` / `max` effort.** Symptom: a long deliverable takes a long time or hits `max_tokens`. Set `max_tokens` to cover thinking plus reply, then append to the end of the user message, replacing `[max_tokens]` with the request's actual value:
+
+```
+Everything produced in one reply, including any reasoning or drafting done before the reply, counts toward a single limit of about [max_tokens] tokens. If that limit is reached before the reply is finished, the person receives a cut-off response and has to start over. Composing an entire output or deliverable in full as reasoning and then again as a reply would double the length of the turn without improving the result, so don't do that.
+
+Instead, when the person has asked for a long or effort-intensive deliverable such as a multi-section document, a large table or dataset, or a complete code file, spend extra effort on understanding the request, checking the inputs the answer depends on, settling the structure and other difficult decisions, and otherwise using the reasoning space to reason and the output space to write an output. Usually it is not needed to draft an output multiple times.
+```
+
+**When to use:** Fable 5.1 / Mythos 5.1 targets showing one of the eight symptoms. Add the matching block only — these are patches, not a checklist to apply wholesale.
